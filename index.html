@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبر معلوماتك ٣ - صخر MSX (نسخة التحدي)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --msx-blue: #0000AA;
+            --msx-cyan: #00AAAA;
+            --msx-white: #FFFFFF;
+            --msx-yellow: #FFFF55;
+            --msx-green: #55FF55;
+            --msx-red: #FF5555;
+            --msx-black: #000000;
+            --msx-gray: #555555;
+        }
+
+        @keyframes buzz-wiggle {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(2px, -2px) rotate(5deg);
+            }
+
+            50% {
+                transform: translate(-2px, 2px) rotate(-5deg);
+            }
+
+            75% {
+                transform: translate(2px, 2px) rotate(5deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+
+        @keyframes hex-flip {
+            0% {
+                transform: scaleX(1);
+            }
+
+            50% {
+                transform: scaleX(0);
+                filter: brightness(2);
+            }
+
+            100% {
+                transform: scaleX(1);
+            }
+        }
+
+        @keyframes flash-red {
+
+            0%,
+            100% {
+                color: var(--msx-white);
+            }
+
+            50% {
+                color: var(--msx-red);
+            }
+        }
+
+        body {
+            background-color: var(--msx-black);
+            color: var(--msx-white);
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #game-wrapper {
+            width: 95vw;
+            max-width: 1100px;
+            background-color: var(--msx-blue);
+            border: 6px solid var(--msx-white);
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 1);
+        }
+
+        #game-wrapper::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .screen {
+            display: none;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .title-gold {
+            color: var(--msx-yellow);
+            font-size: 42px;
+            text-shadow: 4px 4px 0 var(--msx-black);
+            margin-bottom: 20px;
+        }
+
+        .settings-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--msx-white);
+            padding: 15px;
+            margin: 20px auto;
+            display: inline-block;
+        }
+
+        .toggle-btn {
+            background: var(--msx-cyan);
+            border: 2px solid white;
+            color: white;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: 'Cairo';
+            margin: 0 10px;
+        }
+
+        .toggle-btn.active {
+            background: var(--msx-yellow);
+            color: black;
+        }
+
+        .board-layout {
+            display: grid;
+            grid-template-columns: 160px 1fr 160px;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .board-container {
+            position: relative;
+            width: 650px;
+            height: 650px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--msx-white);
+            margin: 0 auto;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hex {
+            cursor: pointer;
+            stroke: var(--msx-white);
+            stroke-width: 2.5;
+            transition: fill 0.3s;
+        }
+
+        .hex:hover {
+            stroke: white;
+            stroke-width: 6;
+            filter: drop-shadow(0 0 15px white);
+        }
+
+        .hex.flipping {
+            animation: hex-flip 0.4s ease-in-out;
+        }
+
+        .hex-text {
+            pointer-events: none;
+            font-size: 18px;
+            font-weight: bold;
+            text-anchor: middle;
+            fill: var(--msx-black);
+        }
+
+        .bee-mascot {
+            position: absolute;
+            font-size: 48px;
+            z-index: 200;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(2px 2px 0 black);
+            opacity: 0;
+        }
+
+        .bee-mascot.flying {
+            animation: buzz-wiggle 0.1s infinite;
+        }
+
+        .team-badge {
+            padding: 20px;
+            border: 4px solid transparent;
+            background: var(--msx-black);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .team-badge.active {
+            border-color: var(--msx-white);
+            transform: scale(1.1);
+            box-shadow: 0 0 25px currentColor;
+        }
+
+        .home-pos {
+            height: 50px;
+            width: 50px;
+            margin: 10px auto;
+            display: block;
+        }
+
+        #question-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--msx-blue);
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 10px double var(--msx-white);
+        }
+
+        #timer-container {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            text-align: center;
+        }
+
+        #timer-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: var(--msx-black);
+            border: 2px solid var(--msx-white);
+            margin-top: 5px;
+        }
+
+        #timer-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: var(--msx-yellow);
+            transition: width 1s linear;
+        }
+
+        #timer-text {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .difficulty-indicator {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            font-size: 14px;
+            padding: 5px 10px;
+            border: 1px solid white;
+            background: black;
+        }
+
+        .question-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .q-image {
+            width: 320px;
+            height: 180px;
+            background: black;
+            border: 3px solid white;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .option-btn {
+            background: var(--msx-cyan);
+            border: 4px solid var(--msx-white);
+            color: white;
+            padding: 12px;
+            margin: 5px 0;
+            cursor: pointer;
+            font-family: 'Cairo';
+            font-size: 20px;
+            text-align: right;
+            width: 100%;
+        }
+
+        .option-btn:hover {
+            background: var(--msx-white);
+            color: var(--msx-blue);
+        }
+    </style>
+</head>
+
+<body class="turn-team1">
+
+    <div id="game-wrapper">
+        <!-- Screen 1: Start -->
+        <div id="screen-start" class="screen active">
+            <h1 class="title-gold">اختبر معلوماتك ٣</h1>
+
+            <div class="settings-box">
+                <div>نظام الأرقام:</div>
+                <button class="toggle-btn active" id="num-ar" onclick="setNumbers('ar')">العربية (123)</button>
+                <button class="toggle-btn" id="num-in" onclick="setNumbers('in')">الهندية (١٢٣)</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                <div class="team-box"
+                    style="border: 4px solid var(--msx-yellow); padding: 20px; color: var(--msx-yellow); width: 40%;">
+                    <h3>الفريق الأصفر</h3>
+                    <div style="font-size: 70px;">🐝</div>
+                </div>
+                <div class="team-box"
+                    style="border: 4px solid var(--msx-green); padding: 20px; color: var(--msx-green); width: 40%;">
+                    <h3>الفريق الأخضر</h3>
+                    <div style="font-size: 70px; filter: hue-rotate(90deg);">🐝</div>
+                </div>
+            </div>
+            <button onclick="initBoard()"
+                style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">دخول
+                اللعبة</button>
+        </div>
+
+        <!-- Screen 2: Board -->
+        <div id="screen-board" class="screen">
+            <div class="board-layout">
+                <div class="side-panel">
+                    <div id="badge-team1" class="team-badge" style="color: var(--msx-yellow);">
+                        <div style="font-size: 24px; font-weight: bold;">الأصفر</div>
+                        <div id="home-1" class="home-pos"></div>
+                    </div>
+                </div>
+
+                <div class="board-container" id="board-container">
+                    <div id="bee" class="bee-mascot">🐝</div>
+                    <svg id="hex-grid" viewBox="0 0 650 650">
+                        <g id="hex-layer"></g>
+                    </svg>
+                </div>
+
+                <div class="side-panel">
+                    <div id="badge-team2" class="team-badge" style="color: var(--msx-green);">
+                        <div style="font-size: 24px; font-weight: bold;">الأخضر</div>
+                        <div id="home-2" class="home-pos"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Overlay -->
+        <div id="question-overlay">
+            <div id="timer-container">
+                <div id="timer-text">15</div>
+                <div id="timer-bar-bg">
+                    <div id="timer-bar-fill"></div>
+                </div>
+            </div>
+            <div id="difficulty-text" class="difficulty-indicator">المستوى: سهل</div>
+
+            <div class="question-content">
+                <h2 id="cat-display" style="color: var(--msx-yellow); margin: 0; font-size: 20px;">الفئة</h2>
+                <img id="q-image" class="q-image" style="display: none;" src="" onerror="this.style.display='none'">
+                <div id="q-text" style="font-size: 24px; line-height: 1.4; margin: 10px 0; max-width: 550px;">...</div>
+                <div id="options-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Win Screen -->
+        <div id="screen-win" class="screen">
+            <h1 class="title-gold">تهانينا!</h1>
+            <div id="winner-tag" style="font-size: 44px; margin: 20px;">فاز الفريق!</div>
+            <div style="font-size: 120px;">🏆</div>
+            <button onclick="resetGame()"
+                style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">لعبة
+                جديدة</button>
+        </div>
+    </div>
+
+    <script>
+        // --- SOPHISTICATED DATABASE (Hard Level) ---
+        const QUESTIONS_DB = {
+            "تاريخ": [
+                { q: "من هو القائد الذي انتصر في معركة ملاذكرد عام 1071م؟", a: ["ألب أرسلان", "طغرل بك", "مليكشاه"], c: 0, l: 1 },
+                { q: "أي حضارة استخدمت 'العقد' (Quipu) كنظام لتسجيل البيانات؟", a: ["الإنكا", "المايا", "الآزتك"], c: 0, l: 2 },
+                { q: "ما هو الاسم الحقيقي للسلطان العثماني القانوني؟", a: ["سليمان الأول", "سليم الثاني", "مراد الرابع"], c: 0, l: 1 },
+                { q: "في أي معركة انتهى طموح نابليون في غزو الشرق؟", a: ["أبي قير البحرية", "الأهرام", "عين جالوت"], c: 0, l: 2 },
+                { q: "من هو مؤلف كتاب 'مروج الذهب ومعادن الجوهر'؟", a: ["المسعودي", "الإدريسي", "ابن بطوطة"], c: 0, l: 3 },
+                { q: "أي ملك وقع على وثيقة 'الماغنا كارتا' عام 1215؟", a: ["جون بلاكلاند", "ريتشارد قلب الأسد", "هنري الثامن"], c: 0, l: 2 },
+                { q: "ما هي العاصمة التاريخية لمملكة الأنباط؟", a: ["البتراء", "تدمر", "قرطاج"], c: 0, l: 1 },
+                { q: "من هو مؤسس الدولة الفاطمية؟", a: ["عبيد الله المهدي", "المعز لدين الله", "الحاكم بأمر الله"], c: 0, l: 3 },
+                { q: "أي دولة كانت تسمى سابقاً 'روديسيا الجنوبية'؟", a: ["زيمبابوي", "ناميبيا", "زامبيا"], c: 0, l: 3 },
+                { q: "في أي عام تم توقيع معاهدة وستفاليا؟", a: ["1648", "1713", "1815"], c: 0, l: 3 },
+                { q: "النهضة الإيطالية بدأت في مدينة فلورنسا.", a: ["صح", "خطأ"], c: 0, l: 1 },
+                { q: "معاهدة توردسيلاس قسمت الأراضي الجديدة بين إسبانيا وإنجلترا.", a: ["صح", "خطأ"], c: 1, l: 3 },
+                { q: "من هو آخر أباطرة الروم في القسطنطينية؟", a: ["قسطنطين الحادي عشر", "جستنيان", "ترايان"], c: 0, l: 3 },
+                { q: "ما هي الثورة التي سميت بـ 'الربيع الياباني'؟", a: ["إصلاح ميجي", "ثورة الساموراي", "حرب تشوشو"], c: 0, l: 3 },
+                { q: "من هو أول من عبر الأطلسي طيراناً بمفرده؟", a: ["تشارلز ليندبرغ", "الأخوان رايت", "إميليا إيرهارت"], c: 0, l: 2 },
+                { q: "معركة القادسية وقعت في السنة ١٤ للهجرة.", a: ["صح", "خطأ"], c: 0, l: 2 },
+                { q: "أي ملك فرنسي لقب بـ 'ملك الشمس'؟", a: ["لويس الرابع عشر", "لويس السادس عشر", "شارلمان"], c: 0, l: 1 },
+                { q: "في أي سنة نال المغرب استقلاله عن فرنسا؟", a: ["1956", "1960", "1954"], c: 0, l: 1 },
+                { q: "الحضارة المينوية نشأت في جزيرة قبرص.", a: ["صح", "خطأ"], c: 1, l: 3 },
+                { q: "من هو أول إمبراطور للمقدس الروماني؟", a: ["شارلمان", "أوتو الأول", "فريدريك بربروسا"], c: 0, l: 3 }
+            ],
+            "جغرافيا": [
+                { q: "ما هي الدولة التي تمتلك أكبر عدد من الجزر في العالم؟", a: ["السويد", "إندونيسيا", "الفلبين"], c: 0, l: 3 },
+                { q: "أي محيط يحتوي على 'خندق ماريانا'؟", a: ["الهادئ", "الأطلسي", "الهندي"], c: 0, l: 2 },
+                { q: "ما هي عاصمة بوتان؟", a: ["تيمفو", "كاتماندو", "دكا"], c: 0, l: 3 },
+                { q: "أين تقع صحراء 'ناميب'؟", a: ["ناميبيا", "الجزائر", "أستراليا"], c: 0, l: 2 },
+                { q: "أي نهر يمر عبر ١٠ دول أوروبية؟", a: ["الدانوب", "الراين", "الفولغا"], c: 0, l: 2 },
+                { q: "ما هي أصغر دولة في أفريقيا مساحة؟", a: ["سيشل", "غامبيا", "جيبوتي"], c: 0, l: 3 },
+                { q: "أي ولاية أمريكية هي الأكبر مساحة؟", a: ["ألاسكا", "تكساس", "كاليفورنيا"], c: 0, l: 1 },
+                { q: "أين تقع جزيرة 'سقطرى'؟", a: ["اليمن", "عمان", "الصومال"], c: 0, l: 2 },
+                { q: "ما هو أعمق بحر في العالم؟", a: ["البحر الكاريبي", "البحر المتوسط", "البحر الأحمر"], c: 0, l: 3 },
+                { q: "مدينة إسطنبول تقع في قارتين مختلفتين.", a: ["صح", "خطأ"], c: 0, l: 1 },
+                { q: "ما هي عاصمة كازاخستان الحالية؟", a: ["أستانا", "ألماتي", "بيشكيك"], c: 0, l: 2 },
+                { q: "أي بحر ليس له شواطئ برية؟", a: ["بحر سارغاسو", "بحر اليابان", "البحر الميت"], c: 0, l: 3 },
+                { q: "أين توجد شلالات 'أنجل' الأعلى في العالم؟", a: ["فنزويلا", "البرازيل", "زامبيا"], c: 0, l: 2 },
+                { q: "جبل 'كيليمانجارو' يقع في تنزانيا.", a: ["صح", "خطأ"], c: 0, l: 1 },
+                { q: "ما هي الدولة التي تسمى 'بلاد الألف بحيرة'؟", a: ["فنلندا", "كندا", "النرويج"], c: 0, l: 2 },
+                { q: "نهر الميكونغ يصب في بحر الصين الجنوبي.", a: ["صح", "خطأ"], c: 0, l: 3 },
+                { q: "خط التوقيت الدولي يمر عبر المحيط الأطلسي.", a: ["صح", "خطأ"], c: 1, l: 3 },
+                { q: "أي مدينة تسمى 'المدينة الخالدة'؟", a: ["روما", "القاهرة", "أثينا"], c: 0, l: 1 },
+                { q: "ما هي عاصمة منغوليا؟", a: ["أولان باتور", "هانوي", "تايبيه"], c: 0, l: 2 },
+                { q: "مضيق 'باب المندب' يربط البحر الأحمر ببحر العرب.", a: ["صح", "خطأ"], c: 0, l: 2 }
+            ],
+            "علوم": [
+                { q: "ما هو العنصر الكيميائي الذي يمثله الرمز 'W'؟", a: ["التنجستن", "الفوسفور", "البوتاسيوم"], c: 0, l: 3 },
+                { q: "ما هو الغاز الذي يشكل حوالي ٧٨٪ من الغلاف الجوي؟", a: ["النيتروجين", "الأكسجين", "الأرجون"], c: 0, l: 1 },
+                { q: "كم عدد أزواج الكروموسومات في الخلية البشرية؟", a: ["٢٣ زوجاً", "٤٦ زوجاً", "٢٢ زوجاً"], c: 0, l: 2 },
+                { q: "ما هو الكوكب الذي يدور حوله أكبر عدد من الأقمار؟", a: ["زحل", "المشتري", "أورانوس"], c: 0, l: 3 },
+                { q: "أي جزء من الخلية يسمى 'مصنع الطاقة'؟", a: ["الميتوكوندريا", "النواة", "الريبوسومات"], c: 0, l: 2 },
+                { q: "من هو واضع نظرية النسبية الخاصة؟", a: ["أينشتاين", "نيوتن", "هايزنبرغ"], c: 0, l: 1 },
+                { q: "ما هو أندر فصيلة دم في العالم؟", a: ["دم بمباي (Rh-null)", "AB سالب", "O سالب"], c: 0, l: 3 },
+                { q: "أي معدن يكون سائلاً في درجة حرارة الغرفة؟", a: ["الزئبق", "الفرانسيم", "الجاليوم"], c: 0, l: 1 },
+                { q: "ما هي سرعة الضوء التقريبية في الفراغ؟", a: ["٣٠٠ ألف كم/ث", "١٥٠ ألف كم/ث", "١ مليون كم/ث"], c: 0, l: 2 },
+                { q: "الحوت الأزرق هو أكبر كائن حي عاش على الأرض.", a: ["صح", "خطأ"], c: 0, l: 1 },
+                { q: "ما هو الرمز الكيميائي للفضة؟", a: ["Ag", "Au", "Pb"], c: 0, l: 2 },
+                { q: "ماذا يسمى تحول المادة من الحالة الصلبة إلى الغازية مباشرة؟", a: ["التسامي", "التكثف", "الانصهار"], c: 0, l: 2 },
+                { q: "أي فيتامين ينتجه الجسم عند التعرض للشمس؟", a: ["فيتامين D", "فيتامين C", "فيتامين A"], c: 0, l: 1 },
+                { q: "تنتقل الموجات الصوتية في الفراغ.", a: ["صح", "خطأ"], c: 1, l: 2 },
+                { q: "ما هي الوحدة المستخدمة لقياس المقاومة الكهربائية؟", a: ["الأوم", "الفولت", "الأمبير"], c: 0, l: 2 },
+                { q: "غاز الأوزون يتكون من ٣ ذرات أكسجين.", a: ["صح", "خطأ"], c: 0, l: 2 },
+                { q: "من هو مكتشف البنسلين؟", a: ["ألكسندر فليمنج", "باستور", "كوك"], c: 0, l: 1 },
+                { q: "الألماس يتكون من عنصر الكربون الصافي.", a: ["صح", "خطأ"], c: 0, l: 1 },
+                { q: "ما هو أثقل عنصر طبيعي في الجدول الدوري؟", a: ["اليورانيوم", "الرصاص", "الذهب"], c: 0, l: 3 },
+                { q: "القلب البشري يتكون من ٤ حجرات.", a: ["صح", "خطأ"], c: 0, l: 1 }
+            ],
+            "دين": [
+                { q: "من هو الصحابي الذي اهتز لموته عرش الرحمن؟", a: ["سعد بن معاذ", "خالد بن الوليد", "زيد بن حارثة"], c: 0, l: 3 },
+                { q: "ما هي السورة التي تسمى 'عروس القرآن'؟", a: ["الرحمن", "يس", "الواقعة"], c: 0, l: 2 },
+                { q: "من هو الملك الموكل بالوحي؟", a: ["جبريل", "ميكائيل", "إسرافيل"], c: 0, l: 1 },
+                { q: "كم عدد السجدات في القرآن الكريم؟", a: ["١٥ سجدة", "١٢ سجدة", "١٤ سجدة"], c: 0, l: 2 },
+                { q: "في أي سنة هجرية وقعت غزوة الخندق؟", a: ["٥ هـ", "٣ هـ", "٧ هـ"], c: 0, l: 2 },
+                { q: "من هو الصحابي الذي لقب بـ 'غسيل الملائكة'؟", a: ["حنظلة بن أبي عامر", "حمزة بن عبد المطلب", "جعفر الطيار"], c: 0, l: 3 },
+                { q: "أي سورة بدأت وانتهت بالتسبيح؟", a: ["الحشر", "الحديد", "الأعلى"], c: 0, l: 3 },
+                { q: "كم عدد القراءات المتواترة للقرآن؟", a: ["١٠ قراءات", "٧ قراءات", "١٤ قراءة"], c: 0, l: 2 },
+                { q: "من هو أول من كتب 'بسم الله الرحمن الرحيم'؟", a: ["سليمان عليه السلام", "النبي محمد ﷺ", "علي بن أبي طالب"], c: 0, l: 3 },
+                { q: "القبلة الأولى كانت المسجد الأقصى لمدة ١٧ شهراً.", a: ["صح", "خطأ"], c: 0, l: 1 },
+                { q: "ما هي أطول آية في القرآن الكريم؟", a: ["آية الدين", "آية الكرسي", "آية المباهلة"], c: 0, l: 2 },
+                { q: "من هي المرأة التي أوحى الله إليها؟", a: ["أم موسى", "مريم", "آسيا"], c: 0, l: 3 },
+                { q: "كم عدد أولي العزم من الرسل؟", a: ["٥", "٣", "٧"], c: 0, l: 1 },
+                { q: "في أي سورة ورد ذكر 'الذباب'؟", a: ["الحج", "النحل", "النمل"], c: 0, l: 3 },
+                { q: "من هو النبي الذي سخر الله له الريح؟", a: ["سليمان", "داود", "يوسف"], c: 0, l: 1 },
+                { q: "صلاة الكسوف تؤدى عند غياب القمر.", a: ["صح", "خطأ"], c: 1, l: 2 },
+                { q: "ما هو اسم خازن الجنة؟", a: ["رضوان", "مالك", "منكر"], c: 0, l: 1 },
+                { q: "زيد بن ثابت هو من جمع القرآن في عهد أبي بكر.", a: ["صح", "خطأ"], c: 0, l: 2 },
+                { q: "أي نبي يلقب بـ 'ذي النون'؟", a: ["يونس", "أيوب", "إدريس"], c: 0, l: 1 },
+                { q: "سورة الإخلاص تعادل ثلث القرآن.", a: ["صح", "خطأ"], c: 0, l: 1 }
+            ]
+        };
+
+        // --- GAME STATE ---
+        let audioCtx = null;
+        let numberSystem = 'ar';
+        let currentTurn = 1;
+        let board = [];
+        let timerInterval;
+        let timeLeft = 15;
+        let totalCaptured = 0;
+        let usedQuestions = { "تاريخ": [], "جغرافيا": [], "علوم": [], "دين": [] };
+
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playTone(freq, startTime, duration, type = 'square', volume = 0.05) {
+            try {
+                const ctx = getAudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const now = Math.max(ctx.currentTime + startTime, 0.01); // Ensure positive
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(volume, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(volume * 0.6, now + 0.1);
+                gain.gain.setValueAtTime(volume * 0.6, now + duration - 0.05);
+                gain.gain.linearRampToValueAtTime(0, now + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + duration);
+            } catch (e) { }
+        }
+
+        const numMap = { '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤', '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩' };
+        const revMap = { '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
+
+        function formatTextNumbers(text) {
+            if (typeof text !== 'string') text = text.toString();
+            if (numberSystem === 'in') {
+                return text.replace(/[0-9]/g, d => numMap[d]);
+            } else {
+                return text.replace(/[٠-٩]/g, d => revMap[d]);
+            }
+        }
+
+        function setNumbers(sys) {
+            numberSystem = sys;
+            document.getElementById('num-ar').classList.toggle('active', sys === 'ar');
+            document.getElementById('num-in').classList.toggle('active', sys === 'in');
+        }
+
+        function resetGame() {
+            // Clear any active timers
+            if (timerInterval) clearInterval(timerInterval);
+
+            // Reset UI screens
+            document.getElementById('screen-win').classList.remove('active');
+            document.getElementById('screen-board').classList.remove('active');
+            document.getElementById('question-overlay').style.display = 'none';
+            document.getElementById('screen-start').classList.add('active');
+
+            // Reset game state
+            currentTurn = 1;
+            totalCaptured = 0;
+            board = [];
+            usedQuestions = { "تاريخ": [], "جغرافيا": [], "علوم": [], "دين": [] };
+
+            // Clear the board SVG
+            const layer = document.getElementById('hex-layer');
+            if (layer) layer.innerHTML = "";
+
+            // Reset the bee
+            const bee = document.getElementById('bee');
+            if (bee) {
+                bee.style.opacity = "0";
+                bee.classList.remove('flying');
+            }
+        }
+
+        const ROWS = 5, COLS = 5;
+
+        function initBoard() {
+            document.getElementById('screen-start').classList.remove('active');
+            document.getElementById('screen-board').classList.add('active');
+            const layer = document.getElementById('hex-layer');
+            layer.innerHTML = "";
+            board = [];
+            totalCaptured = 0;
+            usedQuestions = { "تاريخ": [], "جغرافيا": [], "علوم": [], "دين": [] };
+
+            const r = 58, h = r * Math.sqrt(3), w = r * 2;
+            const gridW = (COLS - 1) * (w * 0.75) + w;
+            const gridH = (ROWS - 1) * h + h;
+            const offsetX = (650 - gridW) / 2 + r, offsetY = (650 - gridH) / 2 + h / 2;
+
+            const categories = [...Object.keys(QUESTIONS_DB), "؟"];
+
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const x = col * (w * 0.75) + offsetX;
+                    const y = row * h + (col % 2 === 1 ? h / 2 : 0) + offsetY;
+                    const cat = categories[Math.floor(Math.random() * categories.length)];
+                    const hexData = { id: `${row}-${col}`, row, col, cat, owner: null, x, y };
+                    board.push(hexData);
+                    drawHex(layer, hexData, r);
+                }
+            }
+
+            setTimeout(() => {
+                const bee = document.getElementById('bee');
+                bee.style.opacity = "1";
+                updateTurn();
+            }, 100);
+        }
+
+        function drawHex(parent, data, r) {
+            const points = [];
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * 60) * Math.PI / 180;
+                points.push(`${data.x + r * Math.cos(angle)},${data.y + r * Math.sin(angle)}`);
+            }
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            poly.setAttribute("points", points.join(" "));
+            poly.setAttribute("class", "hex");
+            poly.setAttribute("id", `poly-${data.id}`);
+            poly.setAttribute("fill", "#AAAAAA");
+            poly.style.transformOrigin = `${data.x}px ${data.y}px`;
+            poly.onclick = () => selectHex(data);
+
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", data.x);
+            text.setAttribute("y", data.y + 8);
+            text.setAttribute("class", "hex-text");
+            text.textContent = data.cat;
+
+            if (data.cat === "؟") {
+                text.style.fontSize = "30px";
+                text.style.fill = "var(--msx-blue)";
+            }
+
+            g.appendChild(poly); g.appendChild(text); parent.appendChild(g);
+        }
+
+        function updateTurn() {
+            document.getElementById('badge-team1').classList.toggle('active', currentTurn === 1);
+            document.getElementById('badge-team2').classList.toggle('active', currentTurn === 2);
+            const bee = document.getElementById('bee');
+            bee.style.filter = currentTurn === 1 ? "none" : "hue-rotate(90deg)";
+            const homeId = `home-${currentTurn}`;
+            const homeRect = document.getElementById(homeId).getBoundingClientRect();
+            const containerRect = document.getElementById('board-container').getBoundingClientRect();
+            bee.style.left = (homeRect.left - containerRect.left + (homeRect.width / 2) - 24) + "px";
+            bee.style.top = (homeRect.top - containerRect.top + (homeRect.height / 2) - 24) + "px";
+        }
+
+        async function selectHex(hex) {
+            if (hex.owner) return;
+            const bee = document.getElementById('bee');
+            const poly = document.getElementById(`poly-${hex.id}`);
+
+            const buzz = setInterval(() => {
+                const ctx = getAudioCtx();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180 + Math.random() * 20, now);
+                g.gain.setValueAtTime(0.015, now);
+                g.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.connect(g); g.connect(ctx.destination);
+                osc.start(now); osc.stop(now + 0.05);
+            }, 60);
+
+            bee.classList.add('flying');
+            const containerRect = document.getElementById('board-container').getBoundingClientRect();
+            bee.style.left = (hex.x / 650) * containerRect.width - 24 + "px";
+            bee.style.top = (hex.y / 650) * containerRect.height - 24 + "px";
+
+            await new Promise(r => setTimeout(r, 800));
+            clearInterval(buzz);
+            bee.classList.remove('flying');
+            poly.classList.add('flipping');
+            playTone(440, 0, 0.1, 'square');
+            await new Promise(r => setTimeout(r, 400));
+            poly.classList.remove('flipping');
+            showQuestion(hex);
+        }
+
+        function showQuestion(hex) {
+            let cat = hex.cat;
+            if (cat === "؟") {
+                const realCats = Object.keys(QUESTIONS_DB);
+                cat = realCats[Math.floor(Math.random() * realCats.length)];
+            }
+
+            const catList = QUESTIONS_DB[cat];
+
+            // Progression Logic: Targeted difficulty increases with captures
+            let targetLevel = Math.min(3, Math.floor(totalCaptured / 5) + 1);
+
+            let availableIndices = [];
+            for (let i = 0; i < catList.length; i++) {
+                if (!usedQuestions[cat].includes(i) && catList[i].l <= targetLevel) {
+                    availableIndices.push(i);
+                }
+            }
+
+            if (availableIndices.length === 0) {
+                for (let i = 0; i < catList.length; i++) {
+                    if (!usedQuestions[cat].includes(i)) availableIndices.push(i);
+                }
+            }
+
+            if (availableIndices.length === 0) {
+                usedQuestions[cat] = [];
+                for (let i = 0; i < catList.length; i++) availableIndices.push(i);
+            }
+
+            const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+            usedQuestions[cat].push(randomIndex);
+            const qData = catList[randomIndex];
+
+            document.getElementById('cat-display').innerText = hex.cat === "؟" ? "؟ (مفاجأة: " + cat + ")" : cat;
+            document.getElementById('q-text').innerText = formatTextNumbers(qData.q);
+
+            const diffLabels = ["", "سهل", "متوسط", "صعب"];
+            document.getElementById('difficulty-text').innerText = "المستوى: " + diffLabels[qData.l];
+
+            const imgEl = document.getElementById('q-image');
+            if (qData.img) { imgEl.src = qData.img; imgEl.style.display = 'block'; }
+            else { imgEl.style.display = 'none'; }
+
+            const optCont = document.getElementById('options-list');
+            optCont.innerHTML = '';
+            qData.a.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = formatTextNumbers(opt);
+                btn.onclick = () => checkAnswer(hex, i === qData.c);
+                optCont.appendChild(btn);
+            });
+
+            document.getElementById('question-overlay').style.display = 'flex';
+            timeLeft = qData.l === 1 ? 15 : (qData.l === 2 ? 11 : 8);
+            startTimer(hex);
+        }
+
+        function startTimer(hex) {
+            updateTimerUI();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft > 4) playTone(880, 0, 0.05, 'sine', 0.02);
+                else if (timeLeft > 0) playTone(1400, 0, 0.08, 'sine', 0.04);
+                if (timeLeft <= 0) checkAnswer(hex, false);
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timer-text').innerText = formatTextNumbers(timeLeft);
+            const bar = document.getElementById('timer-bar-fill');
+            bar.style.width = (timeLeft / 15) * 100 + "%";
+            bar.style.backgroundColor = timeLeft <= 4 ? 'var(--msx-red)' : 'var(--msx-yellow)';
+        }
+
+        function checkAnswer(hex, correct) {
+            clearInterval(timerInterval);
+            document.getElementById('question-overlay').style.display = 'none';
+            if (correct) {
+                hex.owner = currentTurn;
+                totalCaptured++;
+                document.getElementById(`poly-${hex.id}`).setAttribute("fill", currentTurn === 1 ? "var(--msx-yellow)" : "var(--msx-green)");
+                const jingle = [523, 659, 783, 1046];
+                jingle.forEach((f, i) => playTone(f, i * 0.12, 0.1, 'square'));
+                if (checkWin(currentTurn)) { setTimeout(() => showWin(currentTurn), 1000); return; }
+            } else {
+                playTone(120, 0, 0.5, 'sawtooth', 0.05);
+            }
+            currentTurn = currentTurn === 1 ? 2 : 1;
+            updateTurn();
+        }
+
+        function checkWin(teamId) {
+            const owned = board.filter(h => h.owner === teamId);
+            const checkPath = (starts, winCondition) => {
+                if (!starts.length) return false;
+                let queue = [...starts], visited = new Set(starts.map(n => n.id));
+                while (queue.length) {
+                    let c = queue.shift();
+                    if (winCondition(c)) return true;
+                    getNeighbors(c).filter(n => n.owner === teamId && !visited.has(n.id)).forEach(n => {
+                        visited.add(n.id); queue.push(n);
+                    });
+                }
+                return false;
+            };
+            return checkPath(owned.filter(h => h.row === 0), c => c.row === ROWS - 1) ||
+                checkPath(owned.filter(h => h.col === 0), c => c.col === COLS - 1);
+        }
+
+        function getNeighbors(h) {
+            const d = h.col % 2 === 0 ? [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1]] : [[-1, 0], [1, 0], [0, -1], [0, 1], [1, -1], [1, 1]];
+            return d.map(([dr, dc]) => board.find(x => x.row === h.row + dr && x.col === h.col + dc)).filter(Boolean);
+        }
+
+        function showWin(teamId) {
+            document.getElementById('screen-board').classList.remove('active');
+            document.getElementById('screen-win').classList.add('active');
+            const winner = teamId === 1 ? "الأصفر" : "الأخضر";
+            document.getElementById('winner-tag').innerText = `فاز الفريق ${winner}!`;
+            const fanfare = [523, 523, 523, 523, 415, 466, 523, 466, 523];
+            fanfare.forEach((f, i) => playTone(f, i * 0.25, 0.2, 'square'));
+        }
+    </script>
+</body>
+
+</html>
