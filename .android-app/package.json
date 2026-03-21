@@ -1,0 +1,16 @@
+{
+  "name": "test-your-knowledge-android",
+  "version": "1.0.0",
+  "description": "Android Wrapper for TestYourKnowledge",
+  "main": "index.js",
+  "scripts": {
+    "sync": "cap sync"
+  },
+  "author": "CodeXpert",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0"
+  }
+}
