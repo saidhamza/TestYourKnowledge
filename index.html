@@ -697,9 +697,13 @@
                     <div class="team-mascot" style="font-size: 70px; filter: hue-rotate(90deg);">🐝</div>
                 </div>
             </div>
-            <button class="primary-btn" onclick="initBoard()"
-                style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">دخول
-                اللعبة</button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <button class="primary-btn" onclick="initBoard()"
+                    style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">دخول
+                    اللعبة</button>
+                <button class="primary-btn" onclick="openHowToPlay()"
+                    style="background: var(--msx-cyan); padding: 10px 30px; font-size: 20px; cursor: pointer; border: 4px solid black; font-family: 'Cairo'; color: white;">طريقة اللعب</button>
+            </div>
             <div id="install-banner"
                 style="display: none; background: rgba(0,0,0,0.8); border: 2px solid var(--msx-yellow); padding: 10px; text-align: center; margin: 15px auto; width: 90%; max-width: 400px; border-radius: 8px;">
                 <p style="margin: 0 0 10px 0; font-size: 16px;">هل ترغب بتثبيت اللعبة كتطبيق على جهازك؟</p>
@@ -764,9 +768,31 @@
                 style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">لعبة
                 جديدة</button>
         </div>
+
+        <!-- How to Play Overlay -->
+        <div id="how-to-play-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+            <div style="background: var(--msx-blue); border: 4px solid var(--msx-white); padding: 20px; max-width: 500px; width: 100%; color: white; text-align: right; line-height: 1.6; position: relative;">
+                <h2 style="color: var(--msx-yellow); text-align: center; margin-top: 0;">طريقة اللعب</h2>
+                <ul style="padding-right: 20px; font-size: 18px;">
+                    <li style="margin-bottom: 10px;">اختر خلية من اللوحة للإجابة على سؤال في إحدى الفئات الثقافية لمعرفة من سيسيطر عليها.</li>
+                    <li style="margin-bottom: 10px;">أجب بشكل صحيح قبل انتهاء الوقت المخصص لتلوين الخلية بلون فريقك بصورة دائمة.</li>
+                    <li style="margin-bottom: 10px;">إذا كانت إجابتك خاطئة، تنتهي محاولتك دون أن تسيطر على الخلية وسينقلب الدور ومسار الفريق الآخر.</li>
+                    <li style="margin-bottom: 10px; font-weight: bold; color: var(--msx-green);">الهدف لتفوز: قم بتكوين مسار متصل من الخلايا بلون فريقك يربط بين حافتين متقابلتين في اللوحة (إما من أعلى إلى أسفل، أو من اليمين إلى اليسار).</li>
+                </ul>
+                <button onclick="closeHowToPlay()" style="background: var(--msx-red); color: white; border: 2px solid white; padding: 10px 30px; font-size: 18px; font-family: 'Cairo'; cursor: pointer; display: block; margin: 20px auto 0;">إغلاق</button>
+            </div>
+        </div>
     </div>
 
     <script>
+        function openHowToPlay() {
+            document.getElementById('how-to-play-overlay').style.display = 'flex';
+        }
+
+        function closeHowToPlay() {
+            document.getElementById('how-to-play-overlay').style.display = 'none';
+        }
+
         // Service Worker Registration (Required for mobile PWA install)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
