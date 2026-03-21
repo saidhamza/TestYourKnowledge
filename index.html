@@ -767,26 +767,60 @@
     </div>
 
     <script>
+        // Service Worker Registration (Required for mobile PWA install)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+            });
+        }
+
         let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
+        const isIos = () => {
+            const userAsset = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAsset);
+        };
+        
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        // Check if we should show the banner
+        function checkInstallBanner() {
             const lastPromptTime = localStorage.getItem('pwaPromptTime');
             const now = new Date().getTime();
             const oneWeek = 7 * 24 * 60 * 60 * 1000;
+            
             if (!lastPromptTime || now - parseInt(lastPromptTime) > oneWeek) {
                 const banner = document.getElementById('install-banner');
                 if (banner) banner.style.display = 'block';
             }
+        }
+
+        // For Android/Chrome
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            checkInstallBanner();
+        });
+
+        // For iOS Safari (which doesn't support beforeinstallprompt)
+        window.addEventListener('load', () => {
+            if (isIos() && !isInStandaloneMode()) {
+                const bannerText = document.querySelector('#install-banner p');
+                if (bannerText) bannerText.innerText = "لتثبيت اللعبة، اضغط على زر المشاركة ثم 'إضافة إلى الشاشة الرئيسية'";
+                const installBtn = document.querySelector('#install-banner button[onclick="installPWA()"]');
+                if (installBtn) installBtn.style.display = 'none'; // Hide the native install button on iOS
+                checkInstallBanner();
+            }
         });
 
         function installPWA() {
-            document.getElementById('install-banner').style.display = 'none';
-            localStorage.setItem('pwaPromptTime', new Date().getTime());
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
             }
+            document.getElementById('install-banner').style.display = 'none';
+            localStorage.setItem('pwaPromptTime', new Date().getTime());
         }
 
         function dismissPWA() {
