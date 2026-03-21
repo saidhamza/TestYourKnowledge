@@ -162,8 +162,10 @@
 
         .board-container {
             position: relative;
-            width: 650px;
-            height: 650px;
+            width: 100%;
+            max-width: 650px;
+            aspect-ratio: 1;
+            height: auto;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid var(--msx-white);
             margin: 0 auto;
@@ -193,7 +195,7 @@
 
         .hex-text {
             pointer-events: none;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             text-anchor: middle;
             fill: var(--msx-black);
@@ -210,6 +212,7 @@
             justify-content: center;
             filter: drop-shadow(2px 2px 0 black);
             opacity: 0;
+            transform: translate(-50%, -50%);
         }
 
         .bee-mascot.flying {
@@ -326,6 +329,313 @@
             background: var(--msx-white);
             color: var(--msx-blue);
         }
+
+        /* --- MOBILE ADAPTATIONS --- */
+        @media (max-width: 900px) and (orientation: portrait) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+                padding: 10px 0;
+                align-items: center;
+            }
+
+            #game-wrapper {
+                width: 96vw;
+                box-sizing: border-box;
+                border: 2px solid var(--msx-white);
+                padding: 10px;
+                margin: auto;
+            }
+
+            .board-layout {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .side-panel {
+                flex-direction: row;
+                width: 100%;
+                justify-content: space-around;
+            }
+
+            .team-badge {
+                padding: 10px;
+                width: 40%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .team-badge > div:first-child {
+                font-size: 16px !important;
+            }
+
+            .home-pos {
+                height: 30px;
+                width: 30px;
+                margin: 0;
+            }
+
+            .title-gold {
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+
+            .team-box {
+                padding: 10px !important;
+                width: 40% !important;
+            }
+            
+            .team-box h3 {
+                font-size: 16px;
+                margin: 10px 0;
+            }
+            
+            .team-box div {
+                font-size: 40px !important;
+            }
+
+            .toggle-btn {
+                padding: 5px 10px;
+                font-size: 14px;
+                margin: 5px;
+            }
+
+            #question-overlay {
+                padding: 15px;
+                border-width: 4px;
+            }
+
+            .question-content {
+                margin-top: 50px;
+            }
+
+            #q-text {
+                font-size: 18px !important;
+            }
+
+            .option-btn {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            #options-list {
+                grid-template-columns: 1fr !important;
+            }
+
+            #timer-container {
+                width: 80%;
+            }
+
+            .difficulty-indicator {
+                top: 15px;
+                right: 15px;
+                font-size: 12px;
+            }
+
+            #winner-tag {
+                font-size: 32px !important;
+            }
+            
+            .settings-box {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .q-image {
+                width: 100%;
+                max-width: 320px;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+
+            .bee-mascot {
+                font-size: 30px !important;
+            }
+        }
+
+        /* --- MOBILE LANDSCAPE ADAPTATIONS --- */
+        @media (max-width: 950px) and (orientation: landscape), (max-height: 500px) {
+            body {
+                height: 100vh;
+                margin: 0;
+                overflow: hidden;
+                padding: 0;
+            }
+
+            #game-wrapper {
+                height: 96vh;
+                width: 98vw;
+                box-sizing: border-box;
+                border: 2px solid var(--msx-white);
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                margin: auto;
+            }
+
+            .title-gold {
+                font-size: 20px;
+                margin: 0 0 5px 0;
+            }
+
+            .teams-container {
+                margin: 5px 0 !important;
+            }
+
+            .primary-btn {
+                padding: 10px 30px !important;
+                font-size: 20px !important;
+                margin: 5px auto !important;
+                display: inline-block;
+            }
+
+            .team-mascot {
+                font-size: 45px !important;
+            }
+
+            .winner-tag {
+                font-size: 24px !important;
+                margin: 5px !important;
+            }
+
+            .trophy-icon {
+                font-size: 60px !important;
+            }
+
+            .board-layout {
+                display: grid;
+                grid-template-columns: 100px 1fr 100px;
+                gap: 20px;
+                height: 100%;
+                align-items: center;
+                width: 100%;
+                margin: 0;
+            }
+
+            .board-container {
+                width: 100%;
+                max-width: 85vh;
+                max-height: 85vh;
+                aspect-ratio: 1;
+                margin: auto;
+                border-width: 1px;
+                align-self: center;
+            }
+
+            .side-panel {
+                gap: 5px;
+            }
+
+            .team-badge {
+                padding: 5px;
+            }
+
+            .team-badge > div:first-child {
+                font-size: 14px !important;
+            }
+
+            .home-pos {
+                height: 25px;
+                width: 25px;
+                margin: 5px auto;
+            }
+
+            .team-box {
+                padding: 5px !important;
+                width: 35% !important;
+            }
+
+            .team-box h3 {
+                font-size: 14px;
+                margin: 5px 0;
+            }
+
+            .team-box div {
+                font-size: 30px !important;
+            }
+
+            .settings-box {
+                padding: 5px;
+                margin: 5px auto;
+            }
+
+            .toggle-btn {
+                padding: 2px 5px;
+                font-size: 12px;
+            }
+
+            #question-overlay {
+                padding: 10px;
+                border-width: 2px;
+            }
+
+            .question-content {
+                margin-top: 25px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .q-image {
+                width: 120px;
+                height: 67px;
+                margin-bottom: 0;
+            }
+
+            #q-text {
+                font-size: 14px !important;
+                margin: 5px 0;
+                width: 100%;
+                text-align: center;
+            }
+
+            #options-list {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 5px !important;
+            }
+
+            .option-btn {
+                font-size: 12px;
+                padding: 5px;
+            }
+
+            .difficulty-indicator {
+                top: 5px;
+                right: 5px;
+                font-size: 10px;
+            }
+
+            #timer-container {
+                top: 5px;
+                width: 150px;
+            }
+
+            #timer-text {
+                font-size: 16px;
+            }
+
+            #timer-bar-bg {
+                height: 5px;
+            }
+            
+            #winner-tag {
+                font-size: 24px !important;
+                margin: 10px;
+            }
+
+            .bee-mascot {
+                font-size: 26px !important;
+            }
+        }
     </style>
 </head>
 
@@ -342,19 +652,19 @@
                 <button class="toggle-btn" id="num-in" onclick="setNumbers('in')">الهندية (١٢٣)</button>
             </div>
 
-            <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+            <div class="teams-container" style="display: flex; justify-content: space-around; margin: 20px 0;">
                 <div class="team-box"
                     style="border: 4px solid var(--msx-yellow); padding: 20px; color: var(--msx-yellow); width: 40%;">
                     <h3>الفريق الأصفر</h3>
-                    <div style="font-size: 70px;">🐝</div>
+                    <div class="team-mascot" style="font-size: 70px;">🐝</div>
                 </div>
                 <div class="team-box"
                     style="border: 4px solid var(--msx-green); padding: 20px; color: var(--msx-green); width: 40%;">
                     <h3>الفريق الأخضر</h3>
-                    <div style="font-size: 70px; filter: hue-rotate(90deg);">🐝</div>
+                    <div class="team-mascot" style="font-size: 70px; filter: hue-rotate(90deg);">🐝</div>
                 </div>
             </div>
-            <button onclick="initBoard()"
+            <button class="primary-btn" onclick="initBoard()"
                 style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">دخول
                 اللعبة</button>
         </div>
@@ -407,9 +717,9 @@
         <!-- Win Screen -->
         <div id="screen-win" class="screen">
             <h1 class="title-gold">تهانينا!</h1>
-            <div id="winner-tag" style="font-size: 44px; margin: 20px;">فاز الفريق!</div>
-            <div style="font-size: 120px;">🏆</div>
-            <button onclick="resetGame()"
+            <div id="winner-tag" class="winner-tag" style="font-size: 44px; margin: 20px;">فاز الفريق!</div>
+            <div class="trophy-icon" style="font-size: 120px;">🏆</div>
+            <button class="primary-btn" onclick="resetGame()"
                 style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">لعبة
                 جديدة</button>
         </div>
@@ -604,9 +914,9 @@
             totalCaptured = 0;
             usedQuestions = { "تاريخ": [], "جغرافيا": [], "علوم": [], "دين": [] };
 
-            const r = 58, h = r * Math.sqrt(3), w = r * 2;
+            const r = 62, h = r * Math.sqrt(3), w = r * 2;
             const gridW = (COLS - 1) * (w * 0.75) + w;
-            const gridH = (ROWS - 1) * h + h;
+            const gridH = (ROWS - 1) * h + h * 1.5; // True grid bounding box height considering columnar offset drops
             const offsetX = (650 - gridW) / 2 + r, offsetY = (650 - gridH) / 2 + h / 2;
 
             const categories = [...Object.keys(QUESTIONS_DB), "؟"];
@@ -666,8 +976,8 @@
             const homeId = `home-${currentTurn}`;
             const homeRect = document.getElementById(homeId).getBoundingClientRect();
             const containerRect = document.getElementById('board-container').getBoundingClientRect();
-            bee.style.left = (homeRect.left - containerRect.left + (homeRect.width / 2) - 24) + "px";
-            bee.style.top = (homeRect.top - containerRect.top + (homeRect.height / 2) - 24) + "px";
+            bee.style.left = (homeRect.left - containerRect.left + (homeRect.width / 2)) + "px";
+            bee.style.top = (homeRect.top - containerRect.top + (homeRect.height / 2)) + "px";
         }
 
         async function selectHex(hex) {
@@ -690,8 +1000,8 @@
 
             bee.classList.add('flying');
             const containerRect = document.getElementById('board-container').getBoundingClientRect();
-            bee.style.left = (hex.x / 650) * containerRect.width - 24 + "px";
-            bee.style.top = (hex.y / 650) * containerRect.height - 24 + "px";
+            bee.style.left = (hex.x / 650) * containerRect.width + "px";
+            bee.style.top = (hex.y / 650) * containerRect.height + "px";
 
             await new Promise(r => setTimeout(r, 800));
             clearInterval(buzz);
@@ -828,6 +1138,12 @@
             const fanfare = [523, 523, 523, 523, 415, 466, 523, 466, 523];
             fanfare.forEach((f, i) => playTone(f, i * 0.25, 0.2, 'square'));
         }
+
+        window.addEventListener('resize', () => {
+            if (document.getElementById('screen-board').classList.contains('active')) {
+                updateTurn();
+            }
+        });
     </script>
 </body>
 
