@@ -22,6 +22,16 @@
         content="تحدَّ أصدقاءك في هذه النسخة المطورة والمستوحاة من ألعاب كمبيوتر صخر الكلاسيكية. تطوير CodeXpert.">
     <meta property="og:image" content="icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMNMCEPRHJ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-YMNMCEPRHJ');
+    </script>
     <style>
         :root {
             --msx-blue: #0000AA;
@@ -681,10 +691,13 @@
             <button class="primary-btn" onclick="initBoard()"
                 style="background: var(--msx-yellow); padding: 15px 50px; font-size: 26px; cursor: pointer; border: 4px solid black; font-family: 'Cairo';">دخول
                 اللعبة</button>
-            <div id="install-banner" style="display: none; background: rgba(0,0,0,0.8); border: 2px solid var(--msx-yellow); padding: 10px; text-align: center; margin: 15px auto; width: 90%; max-width: 400px; border-radius: 8px;">
+            <div id="install-banner"
+                style="display: none; background: rgba(0,0,0,0.8); border: 2px solid var(--msx-yellow); padding: 10px; text-align: center; margin: 15px auto; width: 90%; max-width: 400px; border-radius: 8px;">
                 <p style="margin: 0 0 10px 0; font-size: 16px;">هل ترغب بتثبيت اللعبة كتطبيق على جهازك؟</p>
-                <button onclick="installPWA()" class="toggle-btn" style="background: var(--msx-green); color: black;">تثبيت الإضافة</button>
-                <button onclick="dismissPWA()" class="toggle-btn" style="background: var(--msx-red); color: white;">لاحقاً</button>
+                <button onclick="installPWA()" class="toggle-btn"
+                    style="background: var(--msx-green); color: black;">تثبيت الإضافة</button>
+                <button onclick="dismissPWA()" class="toggle-btn"
+                    style="background: var(--msx-red); color: white;">لاحقاً</button>
             </div>
         </div>
 
