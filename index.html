@@ -684,9 +684,28 @@
         }
         #demo-overlay.visible { display: flex; }
 
+        /* ── DEMO GAME MODE BANNER ─────────────────────────────────── */
+        #demo-mode-banner {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            background: rgba(130, 0, 130, 0.90);
+            color: var(--msx-yellow);
+            text-align: center;
+            padding: 7px 0;
+            font-size: 19px;
+            font-weight: bold;
+            z-index: 450;
+            letter-spacing: 3px;
+            border-bottom: 3px solid var(--msx-yellow);
+            animation: blink-text 1.4s step-start infinite;
+            pointer-events: none;
+        }
+        #demo-mode-banner.visible { display: block; }
+
         @keyframes blink-text {
             0%,100% { opacity: 1; }
-            50%      { opacity: 0; }
+            50%      { opacity: 0.3; }
         }
         @keyframes scanlines {
             0%   { background-position: 0 0; }
@@ -711,13 +730,6 @@
             text-align: center;
             margin-bottom: 30px;
             letter-spacing: 2px;
-        }
-        #demo-overlay .demo-insert {
-            color: var(--msx-white);
-            font-size: 26px;
-            animation: blink-text 0.8s step-start infinite;
-            margin-bottom: 24px;
-            letter-spacing: 1px;
         }
         #demo-overlay .demo-countdown-label {
             color: var(--msx-cyan);
@@ -759,6 +771,8 @@
 <body class="turn-team1">
 
     <div id="game-wrapper">
+        <!-- Demo mode running banner -->
+        <div id="demo-mode-banner">◀ عرض تجريبي — اضغط للإلغاء ▶</div>
         <!-- Screen 1: Start -->
         <div id="screen-start" class="screen active">
             <h1 class="title-gold">اختبر معلوماتك</h1>
@@ -871,7 +885,7 @@
         <div id="demo-overlay" onclick="cancelDemo()">
             <div class="demo-scanlines"></div>
             <div class="demo-title">اختبر معلوماتك</div>
-            <div class="demo-insert">[ أدخل العملة ]</div>
+
             <div class="demo-categories">
                 <span class="demo-cat">تاريخ</span>
                 <span class="demo-cat">جغرافيا</span>
@@ -1142,6 +1156,11 @@
         }
 
         function initBoard() {
+            // Always kill any pending demo when a real game begins
+            clearTimeout(demoTimerId);
+            clearInterval(demoCounterId);
+            document.getElementById('demo-overlay').classList.remove('visible');
+
             document.getElementById('screen-start').classList.remove('active');
             document.getElementById('screen-board').classList.add('active');
             const layer = document.getElementById('hex-layer');
@@ -1399,37 +1418,46 @@
             }
         });
 
-        // ── MSX INTRO MELODY ───────────────────────────────────────────
-        // Inspired by the classic Arabic MSX "Test Your Knowledge" jingle.
-        // Uses the existing Web Audio square-wave synth.
+        // ── ARABIC INTRO MELODY (Maqam Hijaz) ──────────────────────────
+        // Maqam Hijaz on D:  D – Eb – F# – G – A – Bb – C – D
+        // The augmented second (Eb→F#) gives the characteristic Arabic flavour.
+        // Freq references (Hz): D4=293 Eb4=311 F#4=370 G4=392 A4=440
+        //                       Bb4=466 C5=523 D5=587 Eb5=622 F#5=740
         const MSX_MELODY = [
-            // Freq(Hz), delay(s), duration(s)
-            [659, 0.00, 0.12], // E5
-            [659, 0.13, 0.12], // E5
-            [0,   0.26, 0.06], // rest
-            [659, 0.33, 0.12], // E5
-            [0,   0.46, 0.06], // rest
-            [523, 0.53, 0.12], // C5
-            [659, 0.67, 0.16], // E5
-            [784, 0.85, 0.30], // G5  ←  held
-            [392, 1.17, 0.30], // G4
-            [523, 1.50, 0.18], // C5
-            [392, 1.70, 0.12], // G4
-            [330, 1.85, 0.12], // E4
-            [440, 2.00, 0.12], // A4
-            [494, 2.13, 0.12], // B4
-            [466, 2.26, 0.08], // Bb4
-            [440, 2.35, 0.16], // A4
-            [392, 2.53, 0.12], // G4
-            [659, 2.67, 0.12], // E5
-            [784, 2.81, 0.12], // G5
-            [880, 2.95, 0.18], // A5
-            [698, 3.15, 0.12], // F5
-            [784, 3.29, 0.08], // G5
-            [659, 3.38, 0.16], // E5
-            [523, 3.56, 0.12], // C5
-            [587, 3.70, 0.12], // D5
-            [494, 3.84, 0.22], // B4
+            // — Opening: held root, then descending ornament —
+            [392, 0.00, 0.22], // G4  (5th / opening drone)
+            [0,   0.24, 0.04],
+            [392, 0.30, 0.10], // G4
+            [370, 0.41, 0.10], // F#4
+            [311, 0.52, 0.12], // Eb4  \
+            [293, 0.65, 0.30], // D4   — tonic, held
+            [0,   0.97, 0.06],
+            // — Phrase 2: ascent with the aug-2nd leap —
+            [293, 1.05, 0.10], // D4
+            [311, 1.16, 0.10], // Eb4
+            [370, 1.27, 0.12], // F#4  ← augmented 2nd leap!
+            [392, 1.40, 0.12], // G4
+            [440, 1.53, 0.14], // A4
+            [466, 1.68, 0.12], // Bb4
+            [440, 1.81, 0.10], // A4
+            [392, 1.92, 0.32], // G4  (5th, resting)
+            [0,   2.26, 0.06],
+            // — Phrase 3: upper octave ornament —
+            [440, 2.34, 0.10], // A4
+            [466, 2.45, 0.10], // Bb4
+            [523, 2.56, 0.14], // C5
+            [587, 2.71, 0.26], // D5  (octave peak)
+            [523, 2.99, 0.10], // C5
+            [466, 3.10, 0.10], // Bb4
+            [440, 3.21, 0.10], // A4
+            [0,   3.32, 0.06],
+            // — Cadence: descend to tonic with grace note —
+            [392, 3.40, 0.12], // G4
+            [370, 3.53, 0.10], // F#4
+            [311, 3.64, 0.10], // Eb4
+            [293, 3.75, 0.10], // D4
+            [311, 3.86, 0.08], // Eb4  (grace ornament)
+            [293, 3.95, 0.55], // D4  (final, held)
         ];
 
         let introPlayed = false;
@@ -1442,20 +1470,46 @@
             });
         }
 
-        // Play on first user interaction (required by browsers for AudioContext)
+        // Try autoplay immediately (works in WebView/Capacitor).
+        // For desktop/mobile browsers that block autoplay, fire on the VERY FIRST
+        // user gesture anywhere on the document — so the melody starts as soon
+        // as the user does anything at all on the intro page.
         function onFirstInteraction() {
             playMsxIntro();
-            resetDemoTimer(); // also restart the idle timer cleanly
+            resetDemoTimer();
         }
-        document.getElementById('screen-start').addEventListener('click', onFirstInteraction, { once: true });
-        document.getElementById('screen-start').addEventListener('touchstart', onFirstInteraction, { once: true });
 
-        // Play automatically when page loads (works on Android WebView / Capacitor)
         window.addEventListener('load', () => {
             setTimeout(() => {
-                try { playMsxIntro(); } catch(e) {}
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    if (ctx.state !== 'suspended') {
+                        introPlayed = true;
+                        MSX_MELODY.forEach(([freq, delay, dur]) => {
+                            if (freq > 0) playTone(freq, delay, dur, 'square', 0.07);
+                        });
+                    }
+                    ctx.close();
+                } catch(e) {}
             }, 400);
         });
+
+        // Fallback: first meaningful gesture anywhere plays the melody.
+        // We use a named, non-once handler so we can:
+        //   a) skip clicks on the utility number-switcher buttons, and
+        //   b) manually remove all four listeners only after the melody fires.
+        const _melodyEvents = ['click', 'touchstart', 'keydown', 'mousedown'];
+        function onFirstInteraction(e) {
+            // Ignore clicks on the number-system toggle buttons
+            if (e.target && (e.target.id === 'num-ar' || e.target.id === 'num-in')) return;
+            // Remove all listeners — melody will play now
+            _melodyEvents.forEach(evt =>
+                document.removeEventListener(evt, onFirstInteraction, { capture: true }));
+            playMsxIntro();
+            resetDemoTimer();
+        }
+        _melodyEvents.forEach(evt =>
+            document.addEventListener(evt, onFirstInteraction, { capture: true }));
 
         // ── DEMO / ATTRACT MODE ────────────────────────────────────────
         const DEMO_TIMEOUT_S = 15;
@@ -1483,7 +1537,10 @@
         }
 
         function launchDemo() {
-            cancelDemo();
+            // Hide overlay and clear timers WITHOUT re-arming the idle timer
+            clearTimeout(demoTimerId);
+            clearInterval(demoCounterId);
+            document.getElementById('demo-overlay').classList.remove('visible');
             // Auto-start the game as a demo (both moves random)
             initBoard();
             runDemoGame();
@@ -1506,42 +1563,79 @@
         }
 
         // ── DEMO GAME LOGIC ────────────────────────────────────────────
-        // Runs a self-playing demo: random hex picks, random answers.
+        // Self-playing demo: picks a random hex, calls selectHex() directly,
+        // then highlights a random answer before clicking it.
         let demoRunning = false;
         let demoStepTimer = null;
 
         function runDemoGame() {
             demoRunning = true;
+            document.getElementById('demo-mode-banner').classList.add('visible');
             demoStep();
         }
 
         function stopDemoGame() {
             demoRunning = false;
             clearTimeout(demoStepTimer);
+            document.getElementById('demo-mode-banner').classList.remove('visible');
         }
 
-        function demoStep() {
+        async function demoStep() {
             if (!demoRunning) return;
 
-            // Pick a random uncaptured hex
+            // If the win screen appeared (a team won), briefly show it then
+            // immediately start a fresh demo board — the demo never ends.
+            if (document.getElementById('screen-win').classList.contains('active')) {
+                await new Promise(r => setTimeout(r, 2200));
+                if (!demoRunning) return;
+                document.getElementById('screen-win').classList.remove('active');
+                document.getElementById('screen-board').classList.add('active');
+                document.getElementById('screen-start').classList.remove('active');
+                currentTurn = 1;
+                initBoard();
+                await new Promise(r => setTimeout(r, 700));
+                if (!demoRunning) return;
+                demoStep();
+                return;
+            }
+
+            // All hexes captured without triggering win (shouldn’t normally happen)
             const free = board.filter(h => !h.owner);
-            if (!free.length) { resetGame(); return; }
+            if (!free.length) {
+                await new Promise(r => setTimeout(r, 1000));
+                if (!demoRunning) return;
+                initBoard();
+                await new Promise(r => setTimeout(r, 600));
+                demoStep();
+                return;
+            }
+
             const hex = free[Math.floor(Math.random() * free.length)];
 
-            // Simulate clicking it
-            const svgHex = document.getElementById(`hex-${hex.id}`);
-            if (svgHex) svgHex.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            // Use selectHex directly — triggers bee animation + question display
+            await selectHex(hex);
 
-            // After question overlay shows, auto-answer randomly after 1.5s
+            // Give the viewer time to "read" the question
             demoStepTimer = setTimeout(() => {
                 if (!demoRunning) return;
-                const opts = document.querySelectorAll('.option-btn');
-                if (opts.length) {
-                    opts[Math.floor(Math.random() * opts.length)].click();
+                const opts = Array.from(document.querySelectorAll('.option-btn'));
+                if (!opts.length) {
+                    demoStepTimer = setTimeout(demoStep, 1000);
+                    return;
                 }
-                // Schedule next hex after answer resolves
-                demoStepTimer = setTimeout(demoStep, 1800);
-            }, 1500);
+                // Highlight the chosen answer in yellow ("thinking" phase)
+                const chosen = opts[Math.floor(Math.random() * opts.length)];
+                chosen.style.background  = 'var(--msx-yellow)';
+                chosen.style.color       = 'black';
+                chosen.style.borderColor = 'white';
+                // Pause, then click the answer
+                demoStepTimer = setTimeout(() => {
+                    if (!demoRunning) return;
+                    chosen.click();
+                    // Wait for result feedback, then move to the next hex
+                    demoStepTimer = setTimeout(demoStep, 1900);
+                }, 900);
+            }, 2200);
         }
 
         // Stop demo and return to start on any real user interaction during demo
