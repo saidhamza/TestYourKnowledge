@@ -669,6 +669,90 @@
                 font-size: 26px !important;
             }
         }
+
+        /* ── DEMO / ATTRACT MODE ───────────────────────────────────── */
+        #demo-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88);
+            z-index: 900;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        #demo-overlay.visible { display: flex; }
+
+        @keyframes blink-text {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0; }
+        }
+        @keyframes scanlines {
+            0%   { background-position: 0 0; }
+            100% { background-position: 0 4px; }
+        }
+        #demo-overlay .demo-scanlines {
+            position: absolute;
+            top:0; left:0; width:100%; height:100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px, transparent 3px,
+                rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px
+            );
+            pointer-events: none;
+            animation: scanlines 0.2s linear infinite;
+        }
+        #demo-overlay .demo-title {
+            color: var(--msx-yellow);
+            font-size: 38px;
+            font-weight: bold;
+            text-shadow: 3px 3px 0 #000;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        #demo-overlay .demo-insert {
+            color: var(--msx-white);
+            font-size: 26px;
+            animation: blink-text 0.8s step-start infinite;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        #demo-overlay .demo-countdown-label {
+            color: var(--msx-cyan);
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        #demo-overlay .demo-counter {
+            color: var(--msx-red);
+            font-size: 64px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            line-height: 1;
+            margin-bottom: 28px;
+        }
+        #demo-overlay .demo-cancel {
+            color: var(--msx-gray);
+            font-size: 15px;
+            border-top: 1px solid #444;
+            padding-top: 14px;
+            text-align: center;
+        }
+        #demo-overlay .demo-categories {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #demo-overlay .demo-cat {
+            border: 2px solid var(--msx-cyan);
+            color: var(--msx-cyan);
+            padding: 5px 14px;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 
@@ -781,6 +865,22 @@
                 </ul>
                 <button onclick="closeHowToPlay()" style="background: var(--msx-red); color: white; border: 2px solid white; padding: 10px 30px; font-size: 18px; font-family: 'Cairo'; cursor: pointer; display: block; margin: 20px auto 0;">إغلاق</button>
             </div>
+        </div>
+
+        <!-- Demo / Attract Mode Overlay -->
+        <div id="demo-overlay" onclick="cancelDemo()">
+            <div class="demo-scanlines"></div>
+            <div class="demo-title">اختبر معلوماتك</div>
+            <div class="demo-insert">[ أدخل العملة ]</div>
+            <div class="demo-categories">
+                <span class="demo-cat">تاريخ</span>
+                <span class="demo-cat">جغرافيا</span>
+                <span class="demo-cat">علوم</span>
+                <span class="demo-cat">دين</span>
+            </div>
+            <div class="demo-countdown-label">تبدأ الجولة التجريبية بعد</div>
+            <div class="demo-counter" id="demo-counter">15</div>
+            <div class="demo-cancel">اضغط في أي مكان للإلغاء</div>
         </div>
     </div>
 
@@ -1298,6 +1398,169 @@
                 updateTurn();
             }
         });
+
+        // ── MSX INTRO MELODY ───────────────────────────────────────────
+        // Inspired by the classic Arabic MSX "Test Your Knowledge" jingle.
+        // Uses the existing Web Audio square-wave synth.
+        const MSX_MELODY = [
+            // Freq(Hz), delay(s), duration(s)
+            [659, 0.00, 0.12], // E5
+            [659, 0.13, 0.12], // E5
+            [0,   0.26, 0.06], // rest
+            [659, 0.33, 0.12], // E5
+            [0,   0.46, 0.06], // rest
+            [523, 0.53, 0.12], // C5
+            [659, 0.67, 0.16], // E5
+            [784, 0.85, 0.30], // G5  ←  held
+            [392, 1.17, 0.30], // G4
+            [523, 1.50, 0.18], // C5
+            [392, 1.70, 0.12], // G4
+            [330, 1.85, 0.12], // E4
+            [440, 2.00, 0.12], // A4
+            [494, 2.13, 0.12], // B4
+            [466, 2.26, 0.08], // Bb4
+            [440, 2.35, 0.16], // A4
+            [392, 2.53, 0.12], // G4
+            [659, 2.67, 0.12], // E5
+            [784, 2.81, 0.12], // G5
+            [880, 2.95, 0.18], // A5
+            [698, 3.15, 0.12], // F5
+            [784, 3.29, 0.08], // G5
+            [659, 3.38, 0.16], // E5
+            [523, 3.56, 0.12], // C5
+            [587, 3.70, 0.12], // D5
+            [494, 3.84, 0.22], // B4
+        ];
+
+        let introPlayed = false;
+
+        function playMsxIntro() {
+            if (introPlayed) return;
+            introPlayed = true;
+            MSX_MELODY.forEach(([freq, delay, dur]) => {
+                if (freq > 0) playTone(freq, delay, dur, 'square', 0.07);
+            });
+        }
+
+        // Play on first user interaction (required by browsers for AudioContext)
+        function onFirstInteraction() {
+            playMsxIntro();
+            resetDemoTimer(); // also restart the idle timer cleanly
+        }
+        document.getElementById('screen-start').addEventListener('click', onFirstInteraction, { once: true });
+        document.getElementById('screen-start').addEventListener('touchstart', onFirstInteraction, { once: true });
+
+        // Play automatically when page loads (works on Android WebView / Capacitor)
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                try { playMsxIntro(); } catch(e) {}
+            }, 400);
+        });
+
+        // ── DEMO / ATTRACT MODE ────────────────────────────────────────
+        const DEMO_TIMEOUT_S = 15;
+        let demoTimerId = null;
+        let demoCounterId = null;
+        let demoSecondsLeft = DEMO_TIMEOUT_S;
+
+        function startDemoCountdown() {
+            const counterEl = document.getElementById('demo-counter');
+            const overlay   = document.getElementById('demo-overlay');
+            demoSecondsLeft = DEMO_TIMEOUT_S;
+            counterEl.textContent = demoSecondsLeft;
+            overlay.classList.add('visible');
+
+            demoCounterId = setInterval(() => {
+                demoSecondsLeft--;
+                counterEl.textContent = demoSecondsLeft;
+                // Tick sound
+                if (demoSecondsLeft > 0) playTone(440, 0, 0.06, 'square', 0.04);
+                if (demoSecondsLeft <= 0) {
+                    clearInterval(demoCounterId);
+                    launchDemo();
+                }
+            }, 1000);
+        }
+
+        function launchDemo() {
+            cancelDemo();
+            // Auto-start the game as a demo (both moves random)
+            initBoard();
+            runDemoGame();
+        }
+
+        function cancelDemo() {
+            clearTimeout(demoTimerId);
+            clearInterval(demoCounterId);
+            document.getElementById('demo-overlay').classList.remove('visible');
+            resetDemoTimer();
+        }
+
+        function resetDemoTimer() {
+            clearTimeout(demoTimerId);
+            clearInterval(demoCounterId);
+            // Only arm timer when on the start screen
+            if (document.getElementById('screen-start').classList.contains('active')) {
+                demoTimerId = setTimeout(startDemoCountdown, DEMO_TIMEOUT_S * 1000);
+            }
+        }
+
+        // ── DEMO GAME LOGIC ────────────────────────────────────────────
+        // Runs a self-playing demo: random hex picks, random answers.
+        let demoRunning = false;
+        let demoStepTimer = null;
+
+        function runDemoGame() {
+            demoRunning = true;
+            demoStep();
+        }
+
+        function stopDemoGame() {
+            demoRunning = false;
+            clearTimeout(demoStepTimer);
+        }
+
+        function demoStep() {
+            if (!demoRunning) return;
+
+            // Pick a random uncaptured hex
+            const free = board.filter(h => !h.owner);
+            if (!free.length) { resetGame(); return; }
+            const hex = free[Math.floor(Math.random() * free.length)];
+
+            // Simulate clicking it
+            const svgHex = document.getElementById(`hex-${hex.id}`);
+            if (svgHex) svgHex.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+            // After question overlay shows, auto-answer randomly after 1.5s
+            demoStepTimer = setTimeout(() => {
+                if (!demoRunning) return;
+                const opts = document.querySelectorAll('.option-btn');
+                if (opts.length) {
+                    opts[Math.floor(Math.random() * opts.length)].click();
+                }
+                // Schedule next hex after answer resolves
+                demoStepTimer = setTimeout(demoStep, 1800);
+            }, 1500);
+        }
+
+        // Stop demo and return to start on any real user interaction during demo
+        document.getElementById('game-wrapper').addEventListener('click', () => {
+            if (demoRunning) {
+                stopDemoGame();
+                resetGame();
+            }
+        });
+
+        // Arm the timer on page load
+        window.addEventListener('load', resetDemoTimer);
+
+        // Re-arm whenever the start screen becomes visible (after a game ends)
+        const _origResetGame = resetGame;
+        resetGame = function() {
+            _origResetGame();
+            resetDemoTimer();
+        };
     </script>
 </body>
 
